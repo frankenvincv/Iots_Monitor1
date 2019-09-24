@@ -2,6 +2,7 @@ package bku.com.monitor_iots_1;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -47,79 +48,62 @@ public class RealTimeGraph extends Fragment {
     private int lastEntry=0;
     private boolean firstTime = true;
     DataPoint[] listData =null;
-    GraphView graph;
 
-    private TextView mTextView;
+
+    GraphView graph;
+    public TextView mTextView;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_real_time_graph, container, false);
         //mTextView = (TextView) rootView.findViewById(R.id.jsonText);
         graph = (GraphView) rootView.findViewById(R.id.graph1);
-
-
-
         setupThingSpeakTimer();
 
 
-        Button mButton = (Button) rootView.findViewById(R.id.pauseButton);
-        mButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-
-        Button mButton2 = (Button) rootView.findViewById(R.id.ResumeButton);
-        mButton2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-
         return rootView;
     }
-
-    /*@Override
-    public void onResume() {
-        super.onResume();
-        mTimer2 = new Runnable() {
-            @Override
-            public void run() {
-                graphLastXValue += 1d;
-                mSeries.appendData(new DataPoint(graphLastXValue, (Math.random()*11 -5f)), true, 1000);
-                mHandler.postDelayed(this, 1000);
-            }
-        };
-        mHandler.postDelayed(mTimer2, 1000);
-    }*/
-
     //==========================================================================
      /*THIS IS TIMER*/
 
     private void setupThingSpeakTimer() {
         Timer aTimer = new Timer();
-        TimerTask aTask = new TimerTask() {
-            @Override
-            public void run() {
-                int value = (int) (Math.random()*11 -5);
-                sendDatatoThingSpeak(value);
-                if (firstTime)
-                    getDatatoThingSpeak(1000);
-                else
-                    getDatatoThingSpeak(2);
-            }
-        };
-        aTimer.schedule(aTask, 1000, 6000);
+            TimerTask aTask = new TimerTask() {
+                @Override
+                public void run() {
+                    double value = (Math.random() * 11 - 5);
+                    sendDatatoThingSpeak(value);
+                    if (firstTime)
+                        getDatatoThingSpeak(1000);
+                    else
+                        getDatatoThingSpeak(2);
+                }
+            };
+            aTimer.schedule(aTask, 1000, 6000);
     }
 
 
-    /*THIS IS GET - SET DATA TO THINGSPEAK*/
 
+
+    /*THIS IS GET - SET DATA TO THINGSPEAK*/
+    private  void drawGraph(){
+        mSeries = new LineGraphSeries<>(listData);
+        mSeries.setDrawDataPoints(true);
+        mSeries.setDataPointsRadius(6);
+        mSeries.setThickness(5);
+        graph.addSeries(mSeries);
+        graph.setTitle("REALTIME DATA FIELD 1");
+        graph.getViewport().setXAxisBoundsManual(true);
+        graph.getViewport().setMinX(0);
+        graph.getViewport().setMaxX(80);
+        graph.getViewport().setYAxisBoundsManual(true);
+        graph.getViewport().setMinY(-7);
+        graph.getViewport().setMaxY(7);
+        graph.getViewport().setScrollable(true);
+    }
 
     private void sendDatatoThingSpeak(final double value) {
-        Log.d(TAG,"sendDatatoThingSpeak");
+        Log.d(TAG,"sendDatatoThingSpeak : "+value);
         OkHttpClient okHttpClient = new OkHttpClient();
         Request.Builder builder = new Request.Builder();
         String WRITE_API_KEY = "XE1IFXI91UZH3HYP";
@@ -178,10 +162,10 @@ public class RealTimeGraph extends Fragment {
                         drawGraph();
                     }else{
                         if (lastEntry > listData.length) {
-                            Log.d(TAG,"Leng :"+feeds.length());
                             JSONObject entry = feeds.getJSONObject(feeds.length()- 1);
                             DataPoint onePoint = new DataPoint(lastEntry,Double.parseDouble(entry.getString("field1")));
                             mSeries.appendData(onePoint, true, 1000);
+                            Log.d(TAG,"ListData.length = "+listData.length);
                         }
                     }
                 } catch (JSONException e) {
@@ -193,16 +177,5 @@ public class RealTimeGraph extends Fragment {
                 // TO DO : TÁCH CHUỖI JSON VÀ HIỂN THỊ LÊN TRÊN GRAP THEO THỜI GIAN.
         });
     }
-    private  void drawGraph(){
-        mSeries = new LineGraphSeries<>(listData);
-        mSeries.setDrawDataPoints(true);
-        mSeries.setDataPointsRadius(9);
-        mSeries.setThickness(6);
-        graph.addSeries(mSeries);
-        graph.setTitle("REALTIME DATA");
-        graph.getViewport().setXAxisBoundsManual(true);
-        graph.getViewport().setMinX(0);
-        graph.getViewport().setMaxX(40);
-        graph.getViewport().setScrollable(true);
-    }
+
 }

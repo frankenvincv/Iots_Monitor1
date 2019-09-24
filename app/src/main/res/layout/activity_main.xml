@@ -50,14 +50,18 @@
                         android:text="00:00"
                         android:id="@+id/text_clock"/>
                 </LinearLayout>
-
-
             </LinearLayout>
+
             <!--Tương ứng với 80%-->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="2.5">
+            </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="9"
+                android:layout_weight="5"
                 android:orientation="vertical">
                 <!--<com.jjoe64.graphview.GraphView
                     android:layout_width="match_parent"
