@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/MonitorIots1.iml" filepath="$PROJECT_DIR$/MonitorIots1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Iots_Monitor1.iml" filepath="$PROJECT_DIR$/Iots_Monitor1.iml" />
+      <module fileurl="file://C:\Users\HP\Documents\IOTs\Iots_Monitor1\MonitorIots1.iml" filepath="C:\Users\HP\Documents\IOTs\Iots_Monitor1\MonitorIots1.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

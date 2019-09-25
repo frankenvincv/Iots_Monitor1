@@ -42,7 +42,7 @@ import java.util.TimerTask;
 
 
 public class RealTimeGraph extends Fragment {
-    private final String TAG = "IOT-SERVER ALER : ";
+    private final String TAG = "GRAPH FIELD 1 : ";
 
     private LineGraphSeries<DataPoint> mSeries;
     private int lastEntry=0;
@@ -55,6 +55,7 @@ public class RealTimeGraph extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        super.onCreateView(inflater, container, savedInstanceState);
         View rootView = inflater.inflate(R.layout.fragment_real_time_graph, container, false);
         //mTextView = (TextView) rootView.findViewById(R.id.jsonText);
         graph = (GraphView) rootView.findViewById(R.id.graph1);

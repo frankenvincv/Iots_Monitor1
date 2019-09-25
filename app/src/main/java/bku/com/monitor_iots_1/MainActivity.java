@@ -3,8 +3,11 @@ package bku.com.monitor_iots_1;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
+import android.support.design.widget.TabLayout;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -32,12 +35,21 @@ public class MainActivity extends AppCompatActivity {
     private Calendar calendar;
     private SimpleDateFormat dateFormat;
     private String date;
+    private ViewPager viewPager;
+    private TabLayout tabLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         dateTimeDisplay = (TextView)findViewById(R.id.text_clock);
         dateTimeDisplay.setText(getCurrentTime());
+
+
+        tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        final ViewPager viewPager = findViewById(R.id.view_pager);
+        viewPager.setAdapter(new ViewPagerAdapter(getSupportFragmentManager()));
+        tabLayout.setupWithViewPager(viewPager);
+        tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager));
 
     }
     @Override
