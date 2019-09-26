@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -34,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -42,13 +44,12 @@ import java.util.TimerTask;
 
 
 public class RealTimeGraph extends Fragment {
-    private final String TAG = "GRAPH FIELD 1 : ";
+    private final String TAG = "GRAPH FIELD 1";
 
+    Timer aTimer = new Timer();
     private LineGraphSeries<DataPoint> mSeries;
-    private int lastEntry=0;
     private boolean firstTime = true;
-    DataPoint[] listData =null;
-
+    private int lastEntry = 0,lastIndex = 0;
 
     GraphView graph;
     public TextView mTextView;
@@ -57,9 +58,8 @@ public class RealTimeGraph extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         View rootView = inflater.inflate(R.layout.fragment_real_time_graph, container, false);
-        //mTextView = (TextView) rootView.findViewById(R.id.jsonText);
         graph = (GraphView) rootView.findViewById(R.id.graph1);
-        setupThingSpeakTimer();
+        setupThingSpeakTimer(true);
 
 
         return rootView;
@@ -67,44 +67,55 @@ public class RealTimeGraph extends Fragment {
     //==========================================================================
      /*THIS IS TIMER*/
 
-    private void setupThingSpeakTimer() {
-        Timer aTimer = new Timer();
+    @Override
+    public void onPause() {
+        super.onPause();
+        //setupThingSpeakTimer(false);
+    }
+
+    private void setupThingSpeakTimer(boolean value) {
             TimerTask aTask = new TimerTask() {
                 @Override
                 public void run() {
                     double value = (Math.random() * 11 - 5);
                     sendDatatoThingSpeak(value);
                     if (firstTime)
-                        getDatatoThingSpeak(1000);
+                        getDatatoThingSpeak(100);
                     else
                         getDatatoThingSpeak(2);
                 }
             };
+        if (value){
             aTimer.schedule(aTask, 1000, 6000);
+            Log.d(TAG, "setupThingSpeakTimer: START");
+        } else{
+            aTimer.cancel();
+            Log.d(TAG, "setupThingSpeakTimer: PAUSE");
+        }
+
     }
 
 
 
 
     /*THIS IS GET - SET DATA TO THINGSPEAK*/
-    private  void drawGraph(){
+    private  void drawGraph(DataPoint[] listData){
         mSeries = new LineGraphSeries<>(listData);
         mSeries.setDrawDataPoints(true);
-        mSeries.setDataPointsRadius(6);
-        mSeries.setThickness(5);
+        mSeries.setDataPointsRadius(5);
+        mSeries.setThickness(4);
         graph.addSeries(mSeries);
         graph.setTitle("REALTIME DATA FIELD 1");
         graph.getViewport().setXAxisBoundsManual(true);
         graph.getViewport().setMinX(0);
-        graph.getViewport().setMaxX(80);
+        graph.getViewport().setMaxX(listData.length - 10);
         graph.getViewport().setYAxisBoundsManual(true);
-        graph.getViewport().setMinY(-7);
-        graph.getViewport().setMaxY(7);
+        graph.getViewport().setMinY(-8);
+        graph.getViewport().setMaxY(8);
         graph.getViewport().setScrollable(true);
     }
 
     private void sendDatatoThingSpeak(final double value) {
-        Log.d(TAG,"sendDatatoThingSpeak : "+value);
         OkHttpClient okHttpClient = new OkHttpClient();
         Request.Builder builder = new Request.Builder();
         String WRITE_API_KEY = "XE1IFXI91UZH3HYP";
@@ -121,11 +132,10 @@ public class RealTimeGraph extends Fragment {
             @Override
             public void onResponse(Response response) throws IOException {
                 String jsonString = response.body().string();
-                Log.d(TAG,jsonString);
+                Log.d(TAG,"onSending: "+value+ " | send Status : "+jsonString);
             }
         });
     }
-
     private void getDatatoThingSpeak(final int value) {
         OkHttpClient okHttpClient = new OkHttpClient();
         Request.Builder builder = new Request.Builder();
@@ -144,31 +154,28 @@ public class RealTimeGraph extends Fragment {
             @Override
             public void onResponse(Response response) throws IOException {
                 String jsonString = response.body().string();
-                Log.d(TAG, "onResponse: "+jsonString);
                 try {
                     JSONObject reader = new JSONObject(jsonString);
                     JSONObject channel = reader.getJSONObject("channel");
                     lastEntry = Integer.parseInt(channel.getString("last_entry_id"));
                     JSONArray feeds = reader.getJSONArray("feeds");
                     if(firstTime){
-                        listData = new DataPoint[lastEntry];
                         firstTime = false;
-                        for (int i = 0; i < feeds.length(); i++) {
-                            JSONObject entry = feeds.getJSONObject(i);
-                            String field1 = entry.getString("field1");
-                            DataPoint v = new DataPoint(i, Double.parseDouble(field1));
-                            listData[i] = v;
-                            Log.d(TAG, "Data[" + i + "] = " + field1);
-                        }
-                        drawGraph();
+                        drawGraph(generateData(feeds));
                     }else{
-                        if (lastEntry > listData.length) {
+                       if (lastEntry > lastIndex) {
                             JSONObject entry = feeds.getJSONObject(feeds.length()- 1);
-                            DataPoint onePoint = new DataPoint(lastEntry,Double.parseDouble(entry.getString("field1")));
-                            mSeries.appendData(onePoint, true, 1000);
-                            Log.d(TAG,"ListData.length = "+listData.length);
+                            if (!entry.getString("field1").equals("null")) {
+                                DataPoint onePoint = new DataPoint(lastIndex, Double.parseDouble(entry.getString("field1")));
+                                lastIndex+=1;
+                                mSeries.appendData(onePoint, true, 10000);
+                            }
+                            else{
+                                // next
+                            }
                         }
                     }
+                    Log.d(TAG,"onGetting: TRUE | SIZE ARRAY : "+lastIndex);
                 } catch (JSONException e) {
                     Log.e(TAG, "Json parsing error: " + e.getMessage());
 
@@ -178,5 +185,22 @@ public class RealTimeGraph extends Fragment {
                 // TO DO : TÁCH CHUỖI JSON VÀ HIỂN THỊ LÊN TRÊN GRAP THEO THỜI GIAN.
         });
     }
+    private DataPoint[] generateData(JSONArray feeds) throws JSONException {
+        List<String> field1_data = new ArrayList<String>();
+        for (int i = 0; i < feeds.length(); i++) {
+            JSONObject entry = feeds.getJSONObject(i);
+            String temp = entry.getString("field1");
+            if (!temp.equals("null")){
+                field1_data.add(temp);
+            }
+        }
+        lastIndex = field1_data.size();
+        DataPoint[] _field1 = new DataPoint[lastIndex];
+        for (int i =0;i < field1_data.size();i++){
+            DataPoint v = new DataPoint(i, Double.parseDouble(field1_data.get(i)));
+            _field1[i] = v;
+        }
 
+        return _field1;
+    }
 }

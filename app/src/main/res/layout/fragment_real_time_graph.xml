@@ -8,10 +8,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-        <LinearLayout
+        <TextView
+            android:id="@+id/text_top1"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:text="HELLO"
+            android:fontFamily="monospace"
+            android:textSize="15dp"
+            android:gravity="center_vertical|center_horizontal"/>
         <com.jjoe64.graphview.GraphView
             android:layout_width="match_parent"
             android:layout_height="350dp"
